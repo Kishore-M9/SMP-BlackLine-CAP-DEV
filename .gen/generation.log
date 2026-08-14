@@ -1,0 +1,33 @@
+Starting CAP Project Generator...
+Using @sap/cds-dk [9.9.1] from /extbin/globals/bun/global/install/node_modules/@sap/cds-dk
+Using @sap/generator-cap-project [2.0.6] from [/extbin/globals/bun/global/install/node_modules/@sap/generator-cap-project]
+Using root path [/home/user/projects]
+
+Creating project with approuter, connectivity, destination, mta, nodejs, postgres, xsuaa
+
+Adding facet: nodejs
+Adding facet: mta
+Adding facet: xsuaa
+Adding facet: postgres
+Adding facet: approuter
+Adding facet: connectivity
+Adding facet: destination
+
+Successfully initialized CAP project
+Continue with: code BlackLine_Cap 
+
+
+Installing dependencies...
+
+added 272 packages, and audited 273 packages in 5s
+
+40 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+Finished installing dependencies
+
+Done setting up project BlackLine_Cap
+Project is ready to use
+
