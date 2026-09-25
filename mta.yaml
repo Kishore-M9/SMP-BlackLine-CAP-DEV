@@ -36,7 +36,7 @@ modules:
 
     requires:
       - name: BlackLine_Cap-auth
-      - name: Sap_smphi_postgresql
+      - name: Sap_Smphi_Postgresql
       - name: BlackLine_Cap-connectivity
       - name: BlackLine_Cap-destination
 
@@ -91,7 +91,7 @@ resources:
       path: ./xs-security.json
 
       config:
-        xsappname: BlackLine_Cap-${org}-${space}
+        xsappname: BlackLine_Cap
         tenant-mode: dedicated
 
         oauth2-configuration:
@@ -109,8 +109,10 @@ resources:
   # ---------------------------------------------------------
   # EXISTING POSTGRESQL SERVICE
   # ---------------------------------------------------------
-  - name: Sap_smphi_postgresql
+  - name: Sap_Smphi_Postgresql
     type: org.cloudfoundry.existing-service
+    parameters:
+      service-name: Sap_Smphi_Postgresql
 
 
   # ---------------------------------------------------------

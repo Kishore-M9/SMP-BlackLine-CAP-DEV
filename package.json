@@ -21,6 +21,11 @@
       },
       "connectivity": true,
       "destinations": true
+    },
+    "server": {
+      "body_parser": {
+        "limit": "10mb"
+      }
     }
   }
 }

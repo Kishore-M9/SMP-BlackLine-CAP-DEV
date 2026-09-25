@@ -1,24 +1,24 @@
 const cds = require('@sap/cds');
-
+ 
 module.exports = cds.service.impl(function () {
-
+ 
     const {
         CustomerVirtualAccount
     } = this.entities;
-
+ 
     const LANDSCAPES = [
         'PRD',
         'T4S',
         'D4S'
     ];
-
+ 
     // Physical Postgres table/column names, as actually deployed by this
     // CDS model (verified directly against the DB - see notes below).
     const CVA_TABLE = 'blackline_customervirtualaccount';
-
-
+ 
+ 
     function normalizeLandscape(landscape) {
-
+ 
         if (
             landscape === undefined ||
             landscape === null ||
@@ -26,23 +26,23 @@ module.exports = cds.service.impl(function () {
         ) {
             return 'PRD';
         }
-
+ 
         return landscape.trim().toUpperCase();
     }
-
-
+ 
+ 
     function validateLandscape(landscape) {
-
+ 
         if (!LANDSCAPES.includes(landscape)) {
             return `landscape must be one of: ${LANDSCAPES.join(', ')} (or omitted/empty, which defaults to PRD)`;
         }
-
+ 
         return null;
     }
-
-
+ 
+ 
     function foundResult(row) {
-
+ 
         return {
             found: true,
             message: null,
@@ -54,10 +54,10 @@ module.exports = cds.service.impl(function () {
             landscape: row.landscape
         };
     }
-
-
+ 
+ 
     function notFoundResult(message) {
-
+ 
         return {
             found: false,
             message,
@@ -69,8 +69,8 @@ module.exports = cds.service.impl(function () {
             landscape: null
         };
     }
-
-
+ 
+ 
     /*
      * Native-UUID-safe insert helper.
      *
@@ -88,9 +88,9 @@ module.exports = cds.service.impl(function () {
      * INSERT/SELECT round-trip proof.
      */
     async function insertCustomerVirtualAccount(data) {
-
+ 
         const id = cds.utils.uuid();
-
+ 
         await cds.db.tx(tx =>
             tx.run(
                 `INSERT INTO ${CVA_TABLE}
@@ -106,11 +106,11 @@ module.exports = cds.service.impl(function () {
                 ]
             )
         );
-
+ 
         return id;
     }
-
-
+ 
+ 
     /*
      * CREATE
      */
@@ -118,19 +118,19 @@ module.exports = cds.service.impl(function () {
         'CREATE',
         'CustomerVirtualAccount',
         req => {
-
+ 
             req.data.landscape =
                 normalizeLandscape(
                     req.data.landscape
                 );
-
+ 
             const {
                 virtualAccount,
                 customerNumber,
                 companyCode,
                 landscape
             } = req.data;
-
+ 
             if (
                 !virtualAccount ||
                 !customerNumber ||
@@ -141,10 +141,10 @@ module.exports = cds.service.impl(function () {
                     'virtualAccount, customerNumber and companyCode are mandatory'
                 );
             }
-
+ 
             const landscapeError =
                 validateLandscape(landscape);
-
+ 
             if (landscapeError) {
                 return req.error(
                     400,
@@ -153,17 +153,17 @@ module.exports = cds.service.impl(function () {
             }
         }
     );
-
-
+ 
+ 
     this.on(
         'CREATE',
         'CustomerVirtualAccount',
         async (req, next) => {
-
+ 
             if (Array.isArray(req.data)) {
                 return next();
             }
-
+ 
             const {
                 virtualAccount,
                 customerNumber,
@@ -171,9 +171,9 @@ module.exports = cds.service.impl(function () {
                 displayName,
                 landscape
             } = req.data;
-
+ 
             try {
-
+ 
                 const id =
                     await insertCustomerVirtualAccount({
                         virtualAccount,
@@ -182,9 +182,9 @@ module.exports = cds.service.impl(function () {
                         displayName,
                         landscape
                     });
-
+ 
                 req.data.ID = id;
-
+ 
                 return {
                     ID: id,
                     virtualAccount,
@@ -193,23 +193,23 @@ module.exports = cds.service.impl(function () {
                     displayName: displayName ?? null,
                     landscape
                 };
-
+ 
             } catch (err) {
-
+ 
                 if (err.code === '23505') {
-
+ 
                     return req.error(
                         409,
                         `Duplicate: virtualAccount '${virtualAccount}' already exists for landscape '${landscape}'`
                     );
                 }
-
+ 
                 throw err;
             }
         }
     );
-
-
+ 
+ 
     /*
      * UPDATE
      */
@@ -217,7 +217,7 @@ module.exports = cds.service.impl(function () {
         'UPDATE',
         'CustomerVirtualAccount',
         req => {
-
+ 
             if (
                 !req.params?.length &&
                 !req.data?.ID
@@ -227,7 +227,7 @@ module.exports = cds.service.impl(function () {
                     'UPDATE requires a key (ID) in the request path'
                 );
             }
-
+ 
             if (
                 Object.prototype.hasOwnProperty.call(
                     req.data,
@@ -238,12 +238,12 @@ module.exports = cds.service.impl(function () {
                     normalizeLandscape(
                         req.data.landscape
                     );
-
+ 
                 const landscapeError =
                     validateLandscape(
                         req.data.landscape
                     );
-
+ 
                 if (landscapeError) {
                     return req.error(
                         400,
@@ -253,41 +253,41 @@ module.exports = cds.service.impl(function () {
             }
         }
     );
-
-
+ 
+ 
     /*
      * GET BY VIRTUAL ACCOUNT
      */
     this.on(
         'getByVirtualAccount',
         async req => {
-
+ 
             const {
                 virtualAccount
             } = req.data;
-
+ 
             const landscape =
                 normalizeLandscape(
                     req.data.landscape
                 );
-
+ 
             if (!virtualAccount) {
                 return req.error(
                     400,
                     'virtualAccount is required'
                 );
             }
-
+ 
             const landscapeError =
                 validateLandscape(landscape);
-
+ 
             if (landscapeError) {
                 return req.error(
                     400,
                     landscapeError
                 );
             }
-
+ 
             const result =
                 await SELECT.one
                     .from(CustomerVirtualAccount)
@@ -295,36 +295,36 @@ module.exports = cds.service.impl(function () {
                         virtualAccount,
                         landscape
                     });
-
+ 
             if (!result) {
-
+ 
                 return notFoundResult(
                     `No CustomerVirtualAccount found for virtualAccount '${virtualAccount}', landscape '${landscape}'`
                 );
             }
-
+ 
             return foundResult(result);
         }
     );
-
-
+ 
+ 
     /*
      * GET BY CUSTOMER
      */
     this.on(
         'getByCustomer',
         async req => {
-
+ 
             const {
                 customerNumber,
                 companyCode
             } = req.data;
-
+ 
             const landscape =
                 normalizeLandscape(
                     req.data.landscape
                 );
-
+ 
             if (
                 !customerNumber ||
                 !companyCode
@@ -334,17 +334,17 @@ module.exports = cds.service.impl(function () {
                     'customerNumber and companyCode are required'
                 );
             }
-
+ 
             const landscapeError =
                 validateLandscape(landscape);
-
+ 
             if (landscapeError) {
                 return req.error(
                     400,
                     landscapeError
                 );
             }
-
+ 
             const result =
                 await SELECT.one
                     .from(CustomerVirtualAccount)
@@ -353,31 +353,30 @@ module.exports = cds.service.impl(function () {
                         companyCode,
                         landscape
                     });
-
+ 
             if (!result) {
-
+ 
                 return notFoundResult(
                     `No CustomerVirtualAccount found for customer '${customerNumber}', landscape '${landscape}'`
                 );
             }
-
+ 
             return foundResult(result);
         }
     );
-
-
-
+ 
+ 
     /*
      * CREATE BATCH
      */
     this.on(
         'createBatch',
         async req => {
-
+ 
             const {
                 records
             } = req.data;
-
+ 
             if (
                 !Array.isArray(records) ||
                 records.length === 0
@@ -387,28 +386,28 @@ module.exports = cds.service.impl(function () {
                     'records must be a non-empty array of rows'
                 );
             }
-
-
+ 
+ 
             const results = [];
-
-
+ 
+ 
             for (
                 let index = 0;
                 index < records.length;
                 index++
             ) {
-
+ 
                 const row = {
                     ...records[index]
                 };
-
+ 
                 row.landscape =
                     normalizeLandscape(
                         row.landscape
                     );
-
+ 
                 try {
-
+ 
                     if (
                         !row.virtualAccount ||
                         !row.customerNumber ||
@@ -418,19 +417,19 @@ module.exports = cds.service.impl(function () {
                             'virtualAccount, customerNumber and companyCode are mandatory'
                         );
                     }
-
+ 
                     const landscapeError =
                         validateLandscape(
                             row.landscape
                         );
-
+ 
                     if (landscapeError) {
                         throw new Error(landscapeError);
                     }
-
+ 
                     const id =
                         await insertCustomerVirtualAccount(row);
-
+ 
                     results.push({
                         index,
                         success: true,
@@ -442,14 +441,14 @@ module.exports = cds.service.impl(function () {
                         displayName: row.displayName ?? null,
                         landscape: row.landscape
                     });
-
+ 
                 } catch (err) {
-
+ 
                     const message =
                         err.code === '23505'
                             ? `Duplicate: virtualAccount '${row.virtualAccount}' already exists for landscape '${row.landscape}'`
                             : (err.message || 'Failed to create row');
-
+ 
                     results.push({
                         index,
                         success: false,
@@ -463,10 +462,10 @@ module.exports = cds.service.impl(function () {
                     });
                 }
             }
-
-
+ 
+ 
             return results;
         }
     );
-
+ 
 });

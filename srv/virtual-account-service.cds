@@ -53,6 +53,14 @@ service VirtualAccountService @(path: '/odata/v4/virtual-account') {
     ) returns CustomerVirtualAccountLookupResult;
 
 
+    // Fetches every CustomerVirtualAccount row stored in Postgres.
+    // Pass `landscape` to restrict to one landscape (PRD/T4S/D4S);
+    // omit/leave blank to return rows across all landscapes.
+    function getAllVirtualAccounts(
+        landscape : String
+    ) returns many CustomerVirtualAccount;
+
+
     function getByCustomer(
         customerNumber : String,
         companyCode    : String,
